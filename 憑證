@@ -1,0 +1,9 @@
+// Your web app's Firebase configuration
+  const firebaseConfig = {
+    apiKey: "AIzaSyBu6pQxu2QsyjOtAt3TDSFTCkQwv57Z-p4",
+    authDomain: "myresponsivewebsitedata.firebaseapp.com",
+    projectId: "myresponsivewebsitedata",
+    storageBucket: "myresponsivewebsitedata.firebasestorage.app",
+    messagingSenderId: "902585957360",
+    appId: "1:902585957360:web:a4376bf3f71a12f300bb35"
+  };

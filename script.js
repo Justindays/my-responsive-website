@@ -1,27 +1,53 @@
-document.addEventListener('DOMContentLoaded', () => {
+// 確保 script.js 在 DOMContentLoaded 事件中執行，並等待 Firebase 初始化
+document.addEventListener('DOMContentLoaded', async () => {
     const childNameInput = document.getElementById('childNameInput');
     const addChildBtn = document.getElementById('addChildBtn');
     const childrenList = document.getElementById('childrenList');
 
-    // 從 localStorage 載入小孩資料，如果沒有則初始化為空陣列
-    let children = JSON.parse(localStorage.getItem('goodBabyPoints')) || [];
+    // 確保 Firebase db 實例已準備好 (從 index.html 的 <script type="module"> 傳遞過來)
+    const db = window.db;
+    const collection = window.collection;
+    const addDoc = window.addDoc;
+    const getDocs = window.getDocs; // 雖然這裡主要用 onSnapshot，但保留以備不時之需
+    const doc = window.doc;
+    const updateDoc = window.updateDoc;
+    const onSnapshot = window.onSnapshot;
+    const query = window.query;
+    const orderBy = window.orderBy;
 
-    // 渲染小孩列表
-    function renderChildren() {
-        childrenList.innerHTML = ''; // 清空現有列表
-        if (children.length === 0) {
-            const noChildrenMsg = document.createElement('p');
-            noChildrenMsg.textContent = '目前沒有小孩，請新增一個！';
-            noChildrenMsg.style.textAlign = 'center';
-            noChildrenMsg.style.marginTop = '20px';
-            childrenList.appendChild(noChildrenMsg);
+    // 獲取 Firestore 中小孩點數的集合引用
+    const childrenColRef = collection(db, 'children'); // 'children' 是您在 Firestore 中的集合名稱
+
+    // 渲染小孩列表 (使用即時監聽)
+    // onSnapshot 會在資料庫有任何變更時自動觸發
+    const q = query(childrenColRef, orderBy('createdAt', 'asc')); // 根據創建時間排序
+    onSnapshot(q, (snapshot) => {
+        const children = [];
+        if (snapshot.empty) {
+            childrenList.innerHTML = `
+                <p style="text-align: center; margin-top: 20px;">
+                    目前沒有小孩，請新增一個！
+                </p>`;
             return;
         }
+        snapshot.docs.forEach(doc => {
+            children.push({ id: doc.id, ...doc.data() });
+        });
+        renderChildren(children); // 傳遞獲取到的數據進行渲染
+    }, (error) => {
+        console.error("Error listening to Firestore: ", error);
+        alert("載入小孩資料失敗！請檢查網路連線或Firebase設定。");
+    });
 
-        children.forEach((child, index) => {
+    // 實際渲染列表的函數
+    function renderChildren(childrenData) {
+        childrenList.innerHTML = ''; // 清空現有列表
+
+        childrenData.forEach((child) => {
             const listItem = document.createElement('li');
             listItem.className = 'child-item';
-            listItem.dataset.index = index; // 儲存索引，方便查找
+            // 使用 Firestore 的 document ID 作為 data-id 屬性，方便識別
+            listItem.dataset.id = child.id; 
 
             listItem.innerHTML = `
                 <span class="child-name">${child.name}</span>
@@ -38,19 +64,23 @@ document.addEventListener('DOMContentLoaded', () => {
         addEventListenersToButtons();
     }
 
-    // 將小孩資料儲存到 localStorage
-    function saveChildren() {
-        localStorage.setItem('goodBabyPoints', JSON.stringify(children));
-    }
-
     // 增加小孩功能
-    addChildBtn.addEventListener('click', () => {
-        const name = childNameInput.value.trim(); // 移除首尾空白
+    addChildBtn.addEventListener('click', async () => {
+        const name = childNameInput.value.trim();
         if (name) {
-            children.push({ name: name, score: 0 }); // 新增小孩，初始點數為0
-            childNameInput.value = ''; // 清空輸入框
-            saveChildren(); // 儲存到 localStorage
-            renderChildren(); // 重新渲染列表
+            try {
+                // 將小孩資料儲存到 Firestore，同時記錄創建時間用於排序
+                await addDoc(childrenColRef, {
+                    name: name,
+                    score: 0,
+                    createdAt: new Date() 
+                });
+                childNameInput.value = ''; // 清空輸入框
+                // onSnapshot 會自動觸發 renderChildren，所以這裡不需要手動調用
+            } catch (e) {
+                console.error("Error adding document: ", e);
+                alert("新增小孩失敗！請檢查控制台或Firebase連線。");
+            }
         } else {
             alert('請輸入小孩的名字！');
         }
@@ -58,31 +88,49 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // 增減點數功能
     function addEventListenersToButtons() {
-        document.querySelectorAll('.increase-btn').forEach(button => {
-            button.onclick = (event) => { // 使用 onclick 而非 addEventListener 簡化，因為是動態生成
-                const listItem = event.target.closest('.child-item');
-                const index = listItem.dataset.index;
-                children[index].score++;
-                saveChildren();
-                renderChildren(); // 重新渲染以更新點數
-            };
-        });
+        // 使用事件委託來處理按鈕點擊，這樣即使動態新增元素也能監聽到
+        // 這種方式比為每個按鈕單獨添加監聽器更高效
+        childrenList.onclick = async (event) => {
+            const target = event.target;
+            const listItem = target.closest('.child-item');
 
-        document.querySelectorAll('.decrease-btn').forEach(button => {
-            button.onclick = (event) => {
-                const listItem = event.target.closest('.child-item');
-                const index = listItem.dataset.index;
-                if (children[index].score > 0) { // 點數不能為負
-                    children[index].score--;
-                    saveChildren();
-                    renderChildren();
+            if (!listItem) return; // 如果點擊的不是小孩項目內的元素，則不做處理
+
+            const childId = listItem.dataset.id; // 獲取小孩的 Firestore document ID
+            const scoreSpan = listItem.querySelector('.child-score');
+            let currentScore = parseInt(scoreSpan.textContent);
+
+            const childDocRef = doc(db, 'children', childId);
+
+            if (target.classList.contains('increase-btn')) {
+                // 加點
+                try {
+                    await updateDoc(childDocRef, {
+                        score: currentScore + 1
+                    });
+                    // onSnapshot 會自動更新UI
+                } catch (e) {
+                    console.error("Error increasing score: ", e);
+                    alert("增加點數失敗！請檢查控制台。");
+                }
+            } else if (target.classList.contains('decrease-btn')) {
+                // 減點
+                if (currentScore > 0) { // 點數不能為負
+                    try {
+                        await updateDoc(childDocRef, {
+                            score: currentScore - 1
+                        });
+                        // onSnapshot 會自動更新UI
+                    } catch (e) {
+                        console.error("Error decreasing score: ", e);
+                        alert("減少點數失敗！請檢查控制台。");
+                    }
                 } else {
                     alert('點數不能再減少了！');
                 }
-            };
-        });
+            }
+        };
     }
 
-    // 初始化渲染，在頁面載入時顯示現有的小孩
-    renderChildren();
+    // 初始化渲染，onSnapshot 會在頁面載入時自動處理
 });
