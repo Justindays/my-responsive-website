@@ -1,21 +1,27 @@
-<!-- index.html -->
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>我的響應式網頁</title>
-  <link rel="stylesheet" href="style.css" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>好寶寶點數紀錄</title>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <header>
-    <h1>歡迎來到我的網站</h1>
-  </header>
-  <main>
-    <p>這是一個支援手機顯示的網頁。</p>
-  </main>
-  <footer>
-    <p>© 2025 我的網站</p>
-  </footer>
+    <div class="container">
+        <h1>好寶寶點數紀錄</h1>
+
+        <div class="add-child-section">
+            <input type="text" id="childNameInput" placeholder="輸入小孩名字">
+            <button id="addChildBtn">增加小孩</button>
+        </div>
+
+        <div class="children-list-section">
+            <h2>小孩列表</h2>
+            <ul id="childrenList">
+                </ul>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
 </body>
 </html>

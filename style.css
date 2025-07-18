@@ -1,27 +1,145 @@
-/* style.css */
+/* 基本重設與字體設定 */
 body {
-  font-family: sans-serif;
-  margin: 0;
-  padding: 0;
-  line-height: 1.6;
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 20px;
+    background-color: #f4f4f4;
+    color: #333;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start; /* 保持內容置頂對齊 */
+    min-height: 100vh; /* 確保背景至少覆蓋整個視窗高度 */
 }
 
-header, main, footer {
-  padding: 20px;
-  text-align: center;
+.container {
+    background-color: #fff;
+    padding: 25px;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    width: 100%; /* 預設寬度為100% */
+    max-width: 600px; /* 最大寬度，避免在寬螢幕上過寬 */
+    box-sizing: border-box; /* 確保內邊距和邊框包含在寬度內 */
 }
 
-/* 手機優化 */
-@media (max-width: 600px) {
-  body {
-    background-color: #f0f8ff;
-  }
+h1, h2 {
+    text-align: center;
+    color: #0056b3;
+    margin-bottom: 20px;
+}
 
-  h1 {
-    font-size: 24px;
-  }
+/* 增加小孩區塊樣式 */
+.add-child-section {
+    display: flex;
+    gap: 10px; /* 元素之間間距 */
+    margin-bottom: 30px;
+}
 
-  p {
+#childNameInput {
+    flex-grow: 1; /* 讓輸入框填滿可用空間 */
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
     font-size: 16px;
-  }
+}
+
+button {
+    padding: 10px 15px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: background-color 0.3s ease;
+}
+
+button:hover {
+    background-color: #0056b3;
+}
+
+/* 小孩列表樣式 */
+#childrenList {
+    list-style: none; /* 移除列表項目符號 */
+    padding: 0;
+}
+
+.child-item {
+    display: flex;
+    justify-content: space-between; /* 點數、增減按鈕靠右 */
+    align-items: center;
+    padding: 15px;
+    border-bottom: 1px solid #eee;
+    background-color: #f9f9f9;
+    margin-bottom: 10px;
+    border-radius: 5px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.child-item:last-child {
+    border-bottom: none; /* 最後一個項目沒有底線 */
+}
+
+.child-name {
+    font-weight: bold;
+    font-size: 1.1em;
+}
+
+.child-score {
+    font-size: 1.5em;
+    color: #28a745; /* 綠色表示點數 */
+    font-weight: bold;
+    min-width: 40px; /* 確保點數有足夠顯示空間 */
+    text-align: center;
+}
+
+.score-buttons button {
+    padding: 8px 12px;
+    font-size: 1em;
+    margin-left: 5px; /* 按鈕之間間距 */
+}
+
+.score-buttons .decrease-btn {
+    background-color: #dc3545; /* 紅色減分 */
+}
+
+.score-buttons .decrease-btn:hover {
+    background-color: #c82333;
+}
+
+/* 響應式設計：小螢幕調整 */
+@media (max-width: 600px) {
+    body {
+        padding: 10px; /* 手機螢幕邊距小一點 */
+    }
+
+    .container {
+        padding: 15px;
+    }
+
+    .add-child-section {
+        flex-direction: column; /* 輸入框和按鈕垂直排列 */
+        gap: 15px;
+    }
+
+    #childNameInput,
+    .add-child-section button {
+        width: 100%; /* 填滿寬度 */
+    }
+
+    .child-item {
+        flex-direction: column; /* 小孩資訊垂直排列 */
+        align-items: flex-start; /* 左對齊 */
+        gap: 10px;
+    }
+
+    .score-buttons {
+        width: 100%;
+        display: flex;
+        justify-content: center; /* 按鈕置中 */
+    }
+
+    .score-buttons button {
+        flex-grow: 1; /* 讓按鈕填滿寬度 */
+        margin: 0 5px; /* 按鈕之間水平間距 */
+    }
 }
