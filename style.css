@@ -145,4 +145,132 @@ ul {
 
 .score-adjustment-section input[type="number"],
 .score-adjustment-section input[type="text"] {
-    width: calc(100% -
+    width: calc(100% - 24px); /* 考慮 padding 和 border */
+    padding: 12px;
+    margin-bottom: 12px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    font-size: 1em;
+    box-sizing: border-box; /* 確保 padding 和 border 在寬度內 */
+}
+
+.score-adjustment-section input[type="number"]:focus,
+.score-adjustment-section input[type="text"]:focus {
+    border-color: #28a745;
+    box-shadow: 0 0 0 3px rgba(40, 167, 69, 0.25);
+}
+
+.score-adjustment-section button {
+    width: 100%;
+    padding: 14px;
+    background-color: #28a745; /* 綠色確認按鈕 */
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-size: 1.1em;
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.1s ease;
+}
+
+.score-adjustment-section button:hover {
+    background-color: #218838;
+    transform: translateY(-1px);
+}
+.score-adjustment-section button:active {
+    transform: translateY(0);
+}
+
+/* 交易紀錄列表 */
+.transaction-item {
+    display: flex;
+    flex-wrap: wrap; /* 允許換行 */
+    align-items: center;
+    padding: 12px 0;
+    border-bottom: 1px dashed #eee;
+    font-size: 0.95em;
+    color: #555;
+}
+
+.transaction-item:last-child {
+    border-bottom: none; /* 最後一項沒有底線 */
+}
+
+.transaction-date {
+    font-size: 0.85em;
+    color: #888;
+    min-width: 150px; /* 確保日期有足夠空間 */
+    flex-basis: 100%; /* 日期獨佔一行在小螢幕上 */
+    margin-bottom: 5px; /* 與下一行間隔 */
+}
+@media (min-width: 480px) { /* 在較大螢幕上日期和內容同行 */
+    .transaction-date {
+        flex-basis: auto;
+        margin-bottom: 0;
+        margin-right: 15px;
+    }
+}
+
+
+.transaction-reason {
+    flex-grow: 1;
+    margin-right: 10px;
+    word-break: break-word; /* 防止長單詞溢出 */
+}
+
+.transaction-points {
+    font-weight: bold;
+    min-width: 60px; /* 確保點數有足夠空間 */
+    text-align: right;
+    white-space: nowrap; /* 點數不換行 */
+}
+
+.transaction-points.positive {
+    color: #28a745; /* 綠色 */
+}
+
+.transaction-points.negative {
+    color: #dc3545; /* 紅色 */
+}
+
+/* 返回按鈕 */
+.back-button {
+    display: block; /* 讓按鈕獨佔一行 */
+    width: 100%;
+    padding: 12px;
+    background-color: #6c757d; /* 灰色返回按鈕 */
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-size: 1.1em;
+    cursor: pointer;
+    margin-top: 25px;
+    transition: background-color 0.3s ease, transform 0.1s ease;
+}
+
+.back-button:hover {
+    background-color: #5a6268;
+    transform: translateY(-1px);
+}
+.back-button:active {
+    transform: translateY(0);
+}
+
+/* 針對沒有紀錄的訊息 */
+#noTransactionsMessage {
+    color: #777;
+    font-style: italic;
+    text-align: center;
+    padding: 15px;
+    background-color: #f0f0f0;
+    border-radius: 8px;
+}
+
+/* 當前點數的樣式 */
+p#currentScore {
+    font-size: 1.5em;
+    font-weight: bold;
+    text-align: center;
+    color: #007bff;
+    margin-top: 20px;
+    margin-bottom: 20px;
+}
