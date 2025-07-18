@@ -1,22 +1,22 @@
-// 確保 script.js 在 DOMContentLoaded 事件中執行，並等待 Firebase 初始化
 document.addEventListener('DOMContentLoaded', async () => {
     const childNameInput = document.getElementById('childNameInput');
     const addChildBtn = document.getElementById('addChildBtn');
     const childrenList = document.getElementById('childrenList');
 
-    // 確保 Firebase db 實例已準備好 (從 index.html 的 <script type="module"> 傳遞過來)
     const db = window.db;
     const collection = window.collection;
     const addDoc = window.addDoc;
+    const doc = window.doc; // 用於刪除
+    const deleteDoc = window.deleteDoc; // 用於刪除
     const onSnapshot = window.onSnapshot;
     const query = window.query;
     const orderBy = window.orderBy;
+    const writeBatch = window.writeBatch; // 用於批量刪除子集合
 
-    // 獲取 Firestore 中小孩點數的集合引用
-    const childrenColRef = collection(db, 'children'); // 'children' 是您在 Firestore 中的集合名稱
+    const childrenColRef = collection(db, 'children');
 
     // 渲染小孩列表 (使用即時監聽)
-    const q = query(childrenColRef, orderBy('createdAt', 'asc')); // 根據創建時間排序
+    const q = query(childrenColRef, orderBy('createdAt', 'asc'));
     onSnapshot(q, (snapshot) => {
         const children = [];
         if (snapshot.empty) {
@@ -29,7 +29,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         snapshot.docs.forEach(doc => {
             children.push({ id: doc.id, ...doc.data() });
         });
-        renderChildren(children); // 傳遞獲取到的數據進行渲染
+        renderChildren(children);
     }, (error) => {
         console.error("Error listening to Firestore: ", error);
         alert("載入小孩資料失敗！請檢查網路連線或Firebase設定。");
@@ -37,22 +37,21 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // 實際渲染列表的函數
     function renderChildren(childrenData) {
-        childrenList.innerHTML = ''; // 清空現有列表
+        childrenList.innerHTML = '';
 
         childrenData.forEach((child) => {
             const listItem = document.createElement('li');
             listItem.className = 'child-item';
-            listItem.dataset.id = child.id; // 使用 Firestore 的 document ID 作為 data-id 屬性，方便識別
+            listItem.dataset.id = child.id;
 
-            // 這裡不再有加減點按鈕，點擊整個項目會進入詳細頁面
             listItem.innerHTML = `
                 <span class="child-name">${child.name}</span>
                 <span class="child-score">點數: ${child.score}</span>
+                <button class="delete-child-btn" data-id="${child.id}">刪除</button>
             `;
             childrenList.appendChild(listItem);
         });
 
-        // 為新渲染的小孩項目添加點擊事件監聽器
         addEventListenersToChildItems();
     }
 
@@ -66,7 +65,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     score: 0,
                     createdAt: new Date()
                 });
-                childNameInput.value = ''; // 清空輸入框
+                childNameInput.value = '';
             } catch (e) {
                 console.error("Error adding document: ", e);
                 alert("新增小孩失敗！請檢查控制台或Firebase連線。");
@@ -76,15 +75,42 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     });
 
-    // 為小孩列表項目添加點擊事件，導航到詳細頁面
+    // 為小孩列表項目添加點擊事件，處理導航和刪除
     function addEventListenersToChildItems() {
-        childrenList.onclick = (event) => {
+        childrenList.onclick = async (event) => {
             const target = event.target;
             const listItem = target.closest('.child-item');
 
-            if (listItem) {
-                const childId = listItem.dataset.id;
-                // 導航到 child_detail.html，並將小孩 ID 作為 URL 參數傳遞
+            if (!listItem) return;
+
+            const childId = listItem.dataset.id;
+            const childName = listItem.querySelector('.child-name').textContent;
+
+            if (target.classList.contains('delete-child-btn')) {
+                // 刪除小孩功能
+                if (confirm(`確定要刪除小孩 ${childName} 及其所有點數紀錄嗎？這是一個不可逆的操作！`)) {
+                    try {
+                        const childDocToDeleteRef = doc(db, 'children', childId);
+                        const transactionsColToDeleteRef = collection(childDocToDeleteRef, 'transactions');
+
+                        // 由於 Firestore 不會自動刪除子集合，我們需要手動批量刪除其下的所有文檔
+                        const batch = writeBatch(db);
+                        const transactionDocs = await getDocs(transactionsColToDeleteRef);
+                        transactionDocs.forEach(tDoc => {
+                            batch.delete(tDoc.ref);
+                        });
+                        await batch.commit(); // 提交批量刪除
+
+                        // 最後刪除小孩文件本身
+                        await deleteDoc(childDocToDeleteRef);
+                        alert(`${childName} 已成功刪除。`);
+                    } catch (e) {
+                        console.error("Error deleting child: ", e);
+                        alert(`刪除 ${childName} 失敗！請檢查控制台。`);
+                    }
+                }
+            } else {
+                // 導航到 child_detail.html
                 window.location.href = `child_detail.html?id=${childId}`;
             }
         };

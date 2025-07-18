@@ -25,24 +25,32 @@
         window.db = db;
         window.collection = collection;
         window.addDoc = addDoc;
-        window.getDocs = getDocs;
+        window.getDocs = getDocs; // 用於獲取調整人列表
         window.doc = doc;
         window.updateDoc = updateDoc;
-        window.deleteDoc = deleteDoc;
+        window.deleteDoc = deleteDoc; // 用於刪除點數紀錄
         window.onSnapshot = onSnapshot;
         window.query = query;
         window.orderBy = orderBy;
-        window.serverTimestamp = serverTimestamp; // 新增 serverTimestamp 用於記錄時間
+        window.serverTimestamp = serverTimestamp;
     </script>
 </head>
 <body>
     <div class="container">
-        <h1 id="childDetailName"></h1> <p>目前點數: <span id="currentScore">0</span></p>
+        <h1 id="childDetailName"></h1>
+        <p>目前點數: <span id="currentScore">0</span></p>
 
         <div class="score-adjustment-section">
             <h2>調整點數</h2>
-            <input type="number" id="pointsInput" placeholder="輸入點數 (可為負數)">
             <input type="text" id="reasonInput" placeholder="輸入原因 (例如：幫忙洗碗)">
+            <input type="number" id="pointsInput" placeholder="輸入點數 (可為負數)">
+            <div class="adjuster-selection">
+                <select id="adjusterSelect">
+                    <option value="">選擇調整人</option>
+                    </select>
+                <input type="text" id="newAdjusterInput" placeholder="新增調整人">
+                <button id="addAdjusterBtn">新增</button>
+            </div>
             <button id="confirmAdjustmentBtn">確認調整</button>
         </div>
 

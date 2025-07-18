@@ -100,6 +100,7 @@ ul {
     margin-bottom: 10px;
     cursor: pointer; /* 讓整個項目看起來可點擊 */
     transition: background-color 0.3s ease;
+    position: relative; /* 為了刪除按鈕定位 */
 }
 
 .child-item:hover {
@@ -115,13 +116,32 @@ ul {
     font-weight: bold;
     color: #333;
     flex-grow: 1; /* 讓名字佔用更多空間 */
+    margin-right: 10px; /* 與點數間隔 */
 }
 
 .child-score {
     font-size: 1.1em;
     font-weight: bold;
     color: #007bff;
-    margin-left: 20px;
+    margin-right: 15px; /* 與刪除按鈕間隔 */
+    white-space: nowrap; /* 防止點數換行 */
+}
+
+/* 首頁刪除小孩按鈕 */
+.delete-child-btn {
+    padding: 8px 12px;
+    background-color: #dc3545; /* 紅色 */
+    color: white;
+    border: none;
+    border-radius: 5px;
+    font-size: 0.9em;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    flex-shrink: 0; /* 防止按鈕縮小 */
+}
+
+.delete-child-btn:hover {
+    background-color: #c82333;
 }
 
 /* 小孩點數詳情頁面樣式 */
@@ -144,7 +164,8 @@ ul {
 }
 
 .score-adjustment-section input[type="number"],
-.score-adjustment-section input[type="text"] {
+.score-adjustment-section input[type="text"],
+.score-adjustment-section select { /* 新增 select 樣式 */
     width: calc(100% - 24px); /* 考慮 padding 和 border */
     padding: 12px;
     margin-bottom: 12px;
@@ -155,12 +176,50 @@ ul {
 }
 
 .score-adjustment-section input[type="number"]:focus,
-.score-adjustment-section input[type="text"]:focus {
+.score-adjustment-section input[type="text"]:focus,
+.score-adjustment-section select:focus { /* 新增 select focus 樣式 */
     border-color: #28a745;
     box-shadow: 0 0 0 3px rgba(40, 167, 69, 0.25);
 }
 
-.score-adjustment-section button {
+/* 調整人選擇與新增區塊 */
+.adjuster-selection {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 12px;
+}
+
+.adjuster-selection select {
+    flex-grow: 1; /* 讓選擇框佔用更多空間 */
+    width: auto; /* 覆蓋 calc(100% - 24px) */
+    margin-bottom: 0; /* 覆蓋預設 margin-bottom */
+}
+
+.adjuster-selection input[type="text"] {
+    flex-grow: 1;
+    width: auto;
+    margin-bottom: 0;
+}
+
+.adjuster-selection button {
+    padding: 10px 15px;
+    background-color: #17a2b8; /* 青色 */
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-size: 0.9em;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    flex-shrink: 0; /* 防止按鈕縮小 */
+    margin-bottom: 0; /* 覆蓋預設 margin-bottom */
+}
+
+.adjuster-selection button:hover {
+    background-color: #138496;
+}
+
+
+.score-adjustment-section button#confirmAdjustmentBtn { /* 特指確認按鈕 */
     width: 100%;
     padding: 14px;
     background-color: #28a745; /* 綠色確認按鈕 */
@@ -172,11 +231,11 @@ ul {
     transition: background-color 0.3s ease, transform 0.1s ease;
 }
 
-.score-adjustment-section button:hover {
+.score-adjustment-section button#confirmAdjustmentBtn:hover {
     background-color: #218838;
     transform: translateY(-1px);
 }
-.score-adjustment-section button:active {
+.score-adjustment-section button#confirmAdjustmentBtn:active {
     transform: translateY(0);
 }
 
@@ -189,10 +248,19 @@ ul {
     border-bottom: 1px dashed #eee;
     font-size: 0.95em;
     color: #555;
+    position: relative; /* 為了刪除按鈕定位 */
 }
 
 .transaction-item:last-child {
     border-bottom: none; /* 最後一項沒有底線 */
+}
+
+.transaction-info {
+    flex-grow: 1;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    padding-right: 40px; /* 為刪除按鈕留出空間 */
 }
 
 .transaction-date {
@@ -209,7 +277,6 @@ ul {
         margin-right: 15px;
     }
 }
-
 
 .transaction-reason {
     flex-grow: 1;
@@ -231,6 +298,41 @@ ul {
 .transaction-points.negative {
     color: #dc3545; /* 紅色 */
 }
+
+.transaction-adjuster {
+    font-size: 0.85em;
+    color: #666;
+    margin-left: 10px;
+    white-space: nowrap; /* 調整人姓名不換行 */
+}
+
+/* 點數紀錄刪除按鈕 */
+.delete-transaction-btn {
+    position: absolute;
+    right: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    padding: 5px 8px;
+    background-color: #f44336; /* 紅色 */
+    color: white;
+    border: none;
+    border-radius: 4px;
+    font-size: 0.8em;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    opacity: 0; /* 預設隱藏 */
+    visibility: hidden;
+}
+
+.transaction-item:hover .delete-transaction-btn {
+    opacity: 1; /* 滑鼠懸停時顯示 */
+    visibility: visible;
+}
+
+.delete-transaction-btn:hover {
+    background-color: #da190b;
+}
+
 
 /* 返回按鈕 */
 .back-button {

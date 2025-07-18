@@ -18,7 +18,7 @@
 
         // 導入 Firebase 模組，使用確切的版本號 10.9.0
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-app.js";
-        import { getFirestore, collection, addDoc, getDocs, doc, updateDoc, deleteDoc, onSnapshot, query, orderBy } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, getDocs, doc, updateDoc, deleteDoc, onSnapshot, query, orderBy, writeBatch } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-firestore.js"; // 新增 writeBatch
 
         // 初始化 Firebase
         const app = initializeApp(firebaseConfig);
@@ -36,6 +36,7 @@
         window.onSnapshot = onSnapshot;
         window.query = query;
         window.orderBy = orderBy;
+        window.writeBatch = writeBatch; // 暴露 writeBatch
     </script>
 </head>
 <body>

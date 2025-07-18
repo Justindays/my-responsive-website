@@ -3,6 +3,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     const currentScoreSpan = document.getElementById('currentScore');
     const pointsInput = document.getElementById('pointsInput');
     const reasonInput = document.getElementById('reasonInput');
+    const adjusterSelect = document.getElementById('adjusterSelect'); // 新增
+    const newAdjusterInput = document.getElementById('newAdjusterInput'); // 新增
+    const addAdjusterBtn = document.getElementById('addAdjusterBtn'); // 新增
     const confirmAdjustmentBtn = document.getElementById('confirmAdjustmentBtn');
     const transactionHistoryList = document.getElementById('transactionHistoryList');
     const noTransactionsMessage = document.getElementById('noTransactionsMessage');
@@ -16,14 +19,17 @@ document.addEventListener('DOMContentLoaded', async () => {
     const db = window.db;
     const collection = window.collection;
     const addDoc = window.addDoc;
+    const getDocs = window.getDocs;
     const doc = window.doc;
     const updateDoc = window.updateDoc;
+    const deleteDoc = window.deleteDoc;
     const onSnapshot = window.onSnapshot;
     const query = window.query;
     const orderBy = window.orderBy;
     const serverTimestamp = window.serverTimestamp;
 
     let childDocRef; // 用於儲存小孩文件的引用
+    const adjustersColRef = collection(db, 'adjusters'); // 調整人集合的引用
 
     if (!childId) {
         alert('未找到小孩 ID，將返回首頁。');
@@ -71,38 +77,82 @@ document.addEventListener('DOMContentLoaded', async () => {
         // 這裡可以選擇是否彈出錯誤訊息，或者只在控制台顯示
     });
 
+    // 監聽調整人列表的變更
+    onSnapshot(adjustersColRef, (snapshot) => {
+        adjusterSelect.innerHTML = '<option value="">選擇調整人</option>'; // 清空並添加預設選項
+        snapshot.docs.forEach(d => {
+            const option = document.createElement('option');
+            option.value = d.data().name;
+            option.textContent = d.data().name;
+            adjusterSelect.appendChild(option);
+        });
+    }, (error) => {
+        console.error("Error listening to adjusters: ", error);
+    });
+
     // 渲染交易紀錄的函數
     function renderTransactions(transactionsData) {
-        transactionHistoryList.innerHTML = ''; // 清空現有列表
+        transactionHistoryList.innerHTML = '';
 
         transactionsData.forEach((transaction) => {
             const listItem = document.createElement('li');
             listItem.className = 'transaction-item';
+            listItem.dataset.id = transaction.id; // 儲存交易紀錄 ID
 
-            // 格式化時間戳
-            const date = transaction.timestamp ? transaction.timestamp.toDate() : new Date(); // 如果沒有時間戳，使用當前時間
+            const date = transaction.timestamp ? transaction.timestamp.toDate() : new Date();
             const formattedDate = date.toLocaleString('zh-TW', {
                 year: 'numeric', month: 'numeric', day: 'numeric',
                 hour: '2-digit', minute: '2-digit', second: '2-digit',
-                hour12: false // 使用24小時制
+                hour12: false
             });
 
-            // 判斷是增加還是減少
             const typeClass = transaction.points > 0 ? 'positive' : 'negative';
 
             listItem.innerHTML = `
-                <span class="transaction-date">[${formattedDate}]</span>
-                <span class="transaction-reason">${transaction.reason || '無原因'}</span>
-                <span class="transaction-points ${typeClass}">${transaction.points > 0 ? '+' : ''}${transaction.points} 點</span>
+                <div class="transaction-info">
+                    <span class="transaction-date">[${formattedDate}]</span>
+                    <span class="transaction-reason">${transaction.reason || '無原因'}</span>
+                    <span class="transaction-points ${typeClass}">${transaction.points > 0 ? '+' : ''}${transaction.points} 點</span>
+                    <span class="transaction-adjuster"> (經手人: ${transaction.adjuster || '未知'})</span>
+                </div>
+                <button class="delete-transaction-btn">刪除</button>
             `;
             transactionHistoryList.appendChild(listItem);
         });
+        addEventListenersToTransactionButtons(); // 為新生成的刪除按鈕添加事件
     }
+
+    // 新增調整人功能
+    addAdjusterBtn.addEventListener('click', async () => {
+        const newAdjusterName = newAdjusterInput.value.trim();
+        if (newAdjusterName) {
+            try {
+                // 檢查是否已存在
+                const q = query(adjustersColRef, orderBy('name')); // 這裡簡單排序，實際可以加 where 條件
+                const existingAdjusters = await getDocs(q);
+                const exists = existingAdjusters.docs.some(d => d.data().name === newAdjusterName);
+
+                if (!exists) {
+                    await addDoc(adjustersColRef, { name: newAdjusterName });
+                    newAdjusterInput.value = '';
+                    alert(`調整人 "${newAdjusterName}" 已新增！`);
+                } else {
+                    alert(`調整人 "${newAdjusterName}" 已存在。`);
+                }
+            } catch (e) {
+                console.error("Error adding adjuster: ", e);
+                alert("新增調整人失敗！");
+            }
+        } else {
+            alert('請輸入調整人的名字！');
+        }
+    });
 
     // 確認調整點數功能
     confirmAdjustmentBtn.addEventListener('click', async () => {
         const points = parseInt(pointsInput.value);
         const reason = reasonInput.value.trim();
+        const adjuster = adjusterSelect.value; // 從下拉選單獲取調整人
 
         if (isNaN(points)) {
             alert('請輸入有效的點數！');
@@ -114,29 +164,61 @@ document.addEventListener('DOMContentLoaded', async () => {
             return;
         }
 
+        if (!adjuster) { // 檢查是否選擇了調整人
+            alert('請選擇調整人！');
+            return;
+        }
+
         try {
-            // 1. 更新小孩的總點數
-            // 獲取當前點數 (從 UI 讀取，因為 onSnapshot 會即時更新)
             const currentScore = parseInt(currentScoreSpan.textContent);
             await updateDoc(childDocRef, {
                 score: currentScore + points
             });
 
-            // 2. 新增一筆交易紀錄到子集合
             await addDoc(transactionsColRef, {
                 points: points,
                 reason: reason,
-                timestamp: serverTimestamp() // 使用 Firebase 伺服器時間戳，確保時間一致性
+                adjuster: adjuster, // 儲存調整人
+                timestamp: serverTimestamp()
             });
 
-            pointsInput.value = ''; // 清空點數輸入框
-            reasonInput.value = ''; // 清空原因輸入框
+            pointsInput.value = '';
+            reasonInput.value = '';
+            // adjusterSelect.value = ''; // 不清空，讓使用者可以連續使用同一個人
             alert('點數調整成功！');
         } catch (e) {
             console.error("Error adjusting points: ", e);
             alert("點數調整失敗！請檢查控制台或網路連線。");
         }
     });
+
+    // 為點數紀錄的刪除按鈕添加事件 (使用事件委託)
+    function addEventListenersToTransactionButtons() {
+        transactionHistoryList.onclick = async (event) => {
+            const target = event.target;
+            if (target.classList.contains('delete-transaction-btn')) {
+                const listItem = target.closest('.transaction-item');
+                if (listItem) {
+                    const transactionId = listItem.dataset.id;
+                    const reasonText = listItem.querySelector('.transaction-reason').textContent;
+
+                    if (confirm(`確定要刪除這筆點數紀錄嗎？原因: "${reasonText}"`)) {
+                        try {
+                            const transactionDocToDeleteRef = doc(transactionsColRef, transactionId);
+                            await deleteDoc(transactionDocToDeleteRef);
+                            alert('點數紀錄已刪除。請注意，刪除紀錄不會自動回溯總點數。');
+                            // 可以考慮在這裡彈出一個提示，提醒使用者手動調整總點數。
+                            // 或者，更複雜的實現會重新計算總點數，但這會增加複雜性。
+                            // 目前保持簡單，只刪除記錄，不回溯總點數。
+                        } catch (e) {
+                            console.error("Error deleting transaction: ", e);
+                            alert("刪除點數紀錄失敗！");
+                        }
+                    }
+                }
+            }
+        };
+    }
 
     // 返回首頁按鈕
     backToHomeBtn.addEventListener('click', () => {
