@@ -1,145 +1,148 @@
-/* 基本重設與字體設定 */
+/* 通用樣式 */
 body {
-    font-family: Arial, sans-serif;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #f4f7f6;
     margin: 0;
     padding: 20px;
-    background-color: #f4f4f4;
-    color: #333;
     display: flex;
     justify-content: center;
-    align-items: flex-start; /* 保持內容置頂對齊 */
-    min-height: 100vh; /* 確保背景至少覆蓋整個視窗高度 */
+    align-items: flex-start; /* 讓內容從頂部開始排列 */
+    min-height: 100vh;
+    box-sizing: border-box;
 }
 
 .container {
-    background-color: #fff;
-    padding: 25px;
-    border-radius: 8px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    width: 100%; /* 預設寬度為100% */
-    max-width: 600px; /* 最大寬度，避免在寬螢幕上過寬 */
-    box-sizing: border-box; /* 確保內邊距和邊框包含在寬度內 */
+    background-color: #ffffff;
+    padding: 30px;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    width: 100%;
+    max-width: 600px;
+    box-sizing: border-box;
 }
 
-h1, h2 {
+h1 {
+    color: #333;
     text-align: center;
-    color: #0056b3;
-    margin-bottom: 20px;
+    margin-bottom: 30px;
+    font-size: 2.2em;
+    border-bottom: 2px solid #eee;
+    padding-bottom: 15px;
 }
 
-/* 增加小孩區塊樣式 */
+h2 {
+    color: #444;
+    font-size: 1.6em;
+    margin-top: 25px;
+    margin-bottom: 15px;
+}
+
+ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+/* 新增小孩區塊 */
 .add-child-section {
     display: flex;
-    gap: 10px; /* 元素之間間距 */
-    margin-bottom: 30px;
+    gap: 10px;
+    margin-bottom: 25px;
 }
 
 #childNameInput {
-    flex-grow: 1; /* 讓輸入框填滿可用空間 */
-    padding: 10px;
-    border: 1px solid #ddd;
-    border-radius: 5px;
-    font-size: 16px;
+    flex-grow: 1;
+    padding: 12px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    font-size: 1em;
+    outline: none;
 }
 
-button {
-    padding: 10px 15px;
+#childNameInput:focus {
+    border-color: #007bff;
+    box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.25);
+}
+
+#addChildBtn {
+    padding: 12px 20px;
     background-color: #007bff;
     color: white;
     border: none;
-    border-radius: 5px;
+    border-radius: 8px;
+    font-size: 1em;
     cursor: pointer;
-    font-size: 16px;
-    transition: background-color 0.3s ease;
+    transition: background-color 0.3s ease, transform 0.1s ease;
 }
 
-button:hover {
+#addChildBtn:hover {
     background-color: #0056b3;
+    transform: translateY(-1px);
 }
 
-/* 小孩列表樣式 */
-#childrenList {
-    list-style: none; /* 移除列表項目符號 */
-    padding: 0;
+#addChildBtn:active {
+    transform: translateY(0);
+}
+
+/* 小孩列表項目樣式 */
+.children-list-section {
+    margin-top: 20px;
 }
 
 .child-item {
     display: flex;
-    justify-content: space-between; /* 點數、增減按鈕靠右 */
+    justify-content: space-between;
     align-items: center;
-    padding: 15px;
-    border-bottom: 1px solid #eee;
     background-color: #f9f9f9;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 15px 20px;
     margin-bottom: 10px;
-    border-radius: 5px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    cursor: pointer; /* 讓整個項目看起來可點擊 */
+    transition: background-color 0.3s ease;
 }
 
-.child-item:last-child {
-    border-bottom: none; /* 最後一個項目沒有底線 */
+.child-item:hover {
+    background-color: #e9e9e9;
+}
+
+.child-item:active {
+    background-color: #e0e0e0;
 }
 
 .child-name {
+    font-size: 1.2em;
     font-weight: bold;
-    font-size: 1.1em;
+    color: #333;
+    flex-grow: 1; /* 讓名字佔用更多空間 */
 }
 
 .child-score {
-    font-size: 1.5em;
-    color: #28a745; /* 綠色表示點數 */
+    font-size: 1.1em;
     font-weight: bold;
-    min-width: 40px; /* 確保點數有足夠顯示空間 */
-    text-align: center;
+    color: #007bff;
+    margin-left: 20px;
 }
 
-.score-buttons button {
-    padding: 8px 12px;
-    font-size: 1em;
-    margin-left: 5px; /* 按鈕之間間距 */
+/* 小孩點數詳情頁面樣式 */
+.score-adjustment-section, .transaction-history-section {
+    background-color: #fcfcfc;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+    margin-top: 20px;
+    border: 1px solid #eee;
 }
 
-.score-buttons .decrease-btn {
-    background-color: #dc3545; /* 紅色減分 */
+.score-adjustment-section h2, .transaction-history-section h2 {
+    color: #333;
+    margin-top: 0;
+    margin-bottom: 15px;
+    border-bottom: 1px solid #ddd;
+    padding-bottom: 10px;
+    font-size: 1.4em;
 }
 
-.score-buttons .decrease-btn:hover {
-    background-color: #c82333;
-}
-
-/* 響應式設計：小螢幕調整 */
-@media (max-width: 600px) {
-    body {
-        padding: 10px; /* 手機螢幕邊距小一點 */
-    }
-
-    .container {
-        padding: 15px;
-    }
-
-    .add-child-section {
-        flex-direction: column; /* 輸入框和按鈕垂直排列 */
-        gap: 15px;
-    }
-
-    #childNameInput,
-    .add-child-section button {
-        width: 100%; /* 填滿寬度 */
-    }
-
-    .child-item {
-        flex-direction: column; /* 小孩資訊垂直排列 */
-        align-items: flex-start; /* 左對齊 */
-        gap: 10px;
-    }
-
-    .score-buttons {
-        width: 100%;
-        display: flex;
-        justify-content: center; /* 按鈕置中 */
-    }
-
-    .score-buttons button {
-        flex-grow: 1; /* 讓按鈕填滿寬度 */
-        margin: 0 5px; /* 按鈕之間水平間距 */
-    }
-}
+.score-adjustment-section input[type="number"],
+.score-adjustment-section input[type="text"] {
+    width: calc(100% -
