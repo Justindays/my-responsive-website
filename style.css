@@ -1,0 +1,27 @@
+/* style.css */
+body {
+  font-family: sans-serif;
+  margin: 0;
+  padding: 0;
+  line-height: 1.6;
+}
+
+header, main, footer {
+  padding: 20px;
+  text-align: center;
+}
+
+/* 手機優化 */
+@media (max-width: 600px) {
+  body {
+    background-color: #f0f8ff;
+  }
+
+  h1 {
+    font-size: 24px;
+  }
+
+  p {
+    font-size: 16px;
+  }
+}
