@@ -25,10 +25,10 @@
         window.db = db;
         window.collection = collection;
         window.addDoc = addDoc;
-        window.getDocs = getDocs; // 用於獲取調整人列表
+        window.getDocs = getDocs;
         window.doc = doc;
         window.updateDoc = updateDoc;
-        window.deleteDoc = deleteDoc; // 用於刪除點數紀錄
+        window.deleteDoc = deleteDoc;
         window.onSnapshot = onSnapshot;
         window.query = query;
         window.orderBy = orderBy;
@@ -42,7 +42,14 @@
 
         <div class="score-adjustment-section">
             <h2>調整點數</h2>
-            <input type="text" id="reasonInput" placeholder="輸入原因 (例如：幫忙洗碗)">
+            <div class="reason-selection">
+                <select id="reasonSelect">
+                    <option value="">選擇原因</option>
+                    </select>
+                <input type="text" id="newReasonInput" placeholder="新增原因">
+                <button id="addReasonBtn">新增</button>
+            </div>
+
             <input type="number" id="pointsInput" placeholder="輸入點數 (可為負數)">
             <div class="adjuster-selection">
                 <select id="adjusterSelect">
