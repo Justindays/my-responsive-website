@@ -2,10 +2,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     const childDetailName = document.getElementById('childDetailName');
     const currentScoreSpan = document.getElementById('currentScore');
     const pointsInput = document.getElementById('pointsInput');
-    const reasonInput = document.getElementById('reasonInput');
-    const adjusterSelect = document.getElementById('adjusterSelect'); // 新增
-    const newAdjusterInput = document.getElementById('newAdjusterInput'); // 新增
-    const addAdjusterBtn = document.getElementById('addAdjusterBtn'); // 新增
+    // const reasonInput = document.getElementById('reasonInput'); // 移除原因輸入框
+    const reasonSelect = document.getElementById('reasonSelect'); // 新增
+    const newReasonInput = document.getElementById('newReasonInput'); // 新增
+    const addReasonBtn = document.getElementById('addReasonBtn'); // 新增
+
+    const adjusterSelect = document.getElementById('adjusterSelect');
+    const newAdjusterInput = document.getElementById('newAdjusterInput');
+    const addAdjusterBtn = document.getElementById('addAdjusterBtn');
     const confirmAdjustmentBtn = document.getElementById('confirmAdjustmentBtn');
     const transactionHistoryList = document.getElementById('transactionHistoryList');
     const noTransactionsMessage = document.getElementById('noTransactionsMessage');
@@ -30,6 +34,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     let childDocRef; // 用於儲存小孩文件的引用
     const adjustersColRef = collection(db, 'adjusters'); // 調整人集合的引用
+    const reasonsColRef = collection(db, 'reasons'); // 新增：原因集合的引用
 
     if (!childId) {
         alert('未找到小孩 ID，將返回首頁。');
@@ -90,6 +95,19 @@ document.addEventListener('DOMContentLoaded', async () => {
         console.error("Error listening to adjusters: ", error);
     });
 
+    // 新增：監聽原因列表的變更
+    onSnapshot(reasonsColRef, (snapshot) => {
+        reasonSelect.innerHTML = '<option value="">選擇原因</option>'; // 清空並添加預設選項
+        snapshot.docs.forEach(d => {
+            const option = document.createElement('option');
+            option.value = d.data().name;
+            option.textContent = d.data().name;
+            reasonSelect.appendChild(option);
+        });
+    }, (error) => {
+        console.error("Error listening to reasons: ", error);
+    });
+
     // 渲染交易紀錄的函數
     function renderTransactions(transactionsData) {
         transactionHistoryList.innerHTML = '';
@@ -128,12 +146,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (newAdjusterName) {
             try {
                 // 檢查是否已存在
-                const q = query(adjustersColRef, orderBy('name')); // 這裡簡單排序，實際可以加 where 條件
+                const q = query(adjustersColRef, orderBy('name'));
                 const existingAdjusters = await getDocs(q);
                 const exists = existingAdjusters.docs.some(d => d.data().name === newAdjusterName);
 
                 if (!exists) {
-                    await addDoc(adjustersColRef, { name: newAdjusterName });
+                    await addDoc(adjustersColRef, { name: newAdjusterName, createdAt: serverTimestamp() }); // 新增 createdAt
                     newAdjusterInput.value = '';
                     alert(`調整人 "${newAdjusterName}" 已新增！`);
                 } else {
@@ -148,10 +166,37 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     });
 
+    // 新增：新增原因功能
+    addReasonBtn.addEventListener('click', async () => {
+        const newReasonName = newReasonInput.value.trim();
+        if (newReasonName) {
+            try {
+                // 檢查是否已存在
+                const q = query(reasonsColRef, orderBy('name'));
+                const existingReasons = await getDocs(q);
+                const exists = existingReasons.docs.some(d => d.data().name === newReasonName);
+
+                if (!exists) {
+                    await addDoc(reasonsColRef, { name: newReasonName, createdAt: serverTimestamp() }); // 新增 createdAt
+                    newReasonInput.value = '';
+                    alert(`原因 "${newReasonName}" 已新增！`);
+                } else {
+                    alert(`原因 "${newReasonName}" 已存在。`);
+                }
+            } catch (e) {
+                console.error("Error adding reason: ", e);
+                alert("新增原因失敗！");
+            }
+        } else {
+            alert('請輸入原因！');
+        }
+    });
+
     // 確認調整點數功能
     confirmAdjustmentBtn.addEventListener('click', async () => {
         const points = parseInt(pointsInput.value);
-        const reason = reasonInput.value.trim();
+        // const reason = reasonInput.value.trim(); // 從輸入框獲取原因 (舊)
+        const reason = reasonSelect.value; // 從下拉選單獲取原因 (新)
         const adjuster = adjusterSelect.value; // 從下拉選單獲取調整人
 
         if (isNaN(points)) {
@@ -159,8 +204,9 @@ document.addEventListener('DOMContentLoaded', async () => {
             return;
         }
 
+        // 檢查原因是否被選擇
         if (!reason) {
-            alert('請輸入點數調整的原因！');
+            alert('請選擇或新增原因！');
             return;
         }
 
@@ -183,7 +229,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             });
 
             pointsInput.value = '';
-            reasonInput.value = '';
+            // reasonInput.value = ''; // 移除原因輸入框的清空
+            reasonSelect.value = ''; // 清空原因選擇
             // adjusterSelect.value = ''; // 不清空，讓使用者可以連續使用同一個人
             alert('點數調整成功！');
         } catch (e) {

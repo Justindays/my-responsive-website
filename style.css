@@ -182,25 +182,30 @@ ul {
     box-shadow: 0 0 0 3px rgba(40, 167, 69, 0.25);
 }
 
-/* 調整人選擇與新增區塊 */
+/* 原因選擇與新增區塊 (新) */
+.reason-selection,
+/* 調整人選擇與新增區塊 (舊) */
 .adjuster-selection {
     display: flex;
     gap: 10px;
     margin-bottom: 12px;
 }
 
+.reason-selection select,
 .adjuster-selection select {
     flex-grow: 1; /* 讓選擇框佔用更多空間 */
     width: auto; /* 覆蓋 calc(100% - 24px) */
     margin-bottom: 0; /* 覆蓋預設 margin-bottom */
 }
 
+.reason-selection input[type="text"],
 .adjuster-selection input[type="text"] {
     flex-grow: 1;
     width: auto;
     margin-bottom: 0;
 }
 
+.reason-selection button,
 .adjuster-selection button {
     padding: 10px 15px;
     background-color: #17a2b8; /* 青色 */
@@ -214,6 +219,7 @@ ul {
     margin-bottom: 0; /* 覆蓋預設 margin-bottom */
 }
 
+.reason-selection button:hover,
 .adjuster-selection button:hover {
     background-color: #138496;
 }
