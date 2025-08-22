@@ -1,7 +1,7 @@
 document.addEventListener('DOMContentLoaded', () => {
     // 硬編碼的帳號密碼
-    const USERNAME = "myadmin"; 
-    const PASSWORD = "mypassword";
+    const USERNAME = "user"; 
+    const PASSWORD = "1128";
 
     // 獲取 Firebase 和 Firestore 實例
     const db = window.db;
