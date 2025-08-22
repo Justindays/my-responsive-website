@@ -3,9 +3,21 @@ document.addEventListener('DOMContentLoaded', () => {
     const USERNAME = "user"; 
     const PASSWORD = "1128";
 
-    // 獲取 Firebase 和 Firestore 實例
+    // 獲取 DOM 元素
+    const loginSection = document.getElementById('loginSection');
+    const usernameInput = document.getElementById('usernameInput');
+    const passwordInput = document.getElementById('passwordInput');
+    const loginBtn = document.getElementById('loginBtn');
+    const authMessage = document.getElementById('authMessage');
+    const appSection = document.getElementById('appSection');
+    const loggedInUsernameSpan = document.getElementById('loggedInUsername');
+    const logoutBtn = document.getElementById('logoutBtn');
+    const childNameInput = document.getElementById('childNameInput');
+    const addChildBtn = document.getElementById('addChildBtn');
+    const childrenList = document.getElementById('childrenList');
+    const noChildrenMessage = document.getElementById('noChildrenMessage');
+
     const db = window.db;
-    const auth = window.auth; // 獲取 auth 實例
     const collection = window.collection;
     const addDoc = window.addDoc;
     const getDocs = window.getDocs;
@@ -15,30 +27,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const query = window.query;
     const orderBy = window.orderBy;
     const writeBatch = window.writeBatch;
-    const signInWithEmailAndPassword = window.signInWithEmailAndPassword;
-    const signOut = window.signOut;
-
-    // 獲取登入相關的 DOM 元素
-    const loginSection = document.getElementById('loginSection');
-    const usernameInput = document.getElementById('usernameInput');
-    const passwordInput = document.getElementById('passwordInput');
-    const loginBtn = document.getElementById('loginBtn');
-    const authMessage = document.getElementById('authMessage');
-    
-    // 獲取應用程式主區塊和相關 DOM 元素
-    const appSection = document.getElementById('appSection');
-    const loggedInUsernameSpan = document.getElementById('loggedInUsername');
-    const logoutBtn = document.getElementById('logoutBtn');
-    const childNameInput = document.getElementById('childNameInput');
-    const addChildBtn = document.getElementById('addChildBtn');
-    const childrenList = document.getElementById('childrenList');
-    const noChildrenMessage = document.getElementById('noChildrenMessage');
 
     const childrenColRef = collection(db, 'children');
 
     // 檢查登入狀態
     function checkLoginStatus() {
-        // 如果 localStorage 中有登入標誌，則顯示主畫面
         const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
         if (isLoggedIn) {
             loginSection.style.display = 'none';
@@ -52,46 +45,24 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // 登入功能
-    loginBtn.addEventListener('click', async () => {
+    loginBtn.addEventListener('click', () => {
         const username = usernameInput.value.trim();
         const password = passwordInput.value.trim();
 
         if (username === USERNAME && password === PASSWORD) {
-            authMessage.textContent = '登入中...';
-            // 使用一個不存在的電子郵件來嘗試登入
-            const dummyEmail = 'dummy-user@example.com'; 
-            try {
-                // 這行會因為使用者不存在而失敗，但我們需要它來觸發錯誤
-                await signInWithEmailAndPassword(auth, dummyEmail, 'invalid-password');
-            } catch (error) {
-                // 成功捕捉到錯誤，這表示我們可以進行「假登入」
-                // 我們可以將這個錯誤碼視為登入成功的信號
-                if (error.code === 'auth/invalid-credential' || error.code === 'auth/wrong-password') {
-                     // 儲存登入狀態
-                    localStorage.setItem('isLoggedIn', 'true');
-                    localStorage.setItem('username', username);
-                    // 手動設定一個假的 Firebase 權杖，以滿足 Firestore 規則
-                    await auth.updateCurrentUser({
-                        uid: 'dummy-uid',
-                        email: dummyEmail
-                    });
-                    checkLoginStatus();
-                    authMessage.textContent = '';
-                } else {
-                    console.error(error);
-                    authMessage.textContent = '登入失敗，請檢查使用者名稱或密碼。';
-                }
-            }
+            localStorage.setItem('isLoggedIn', 'true');
+            localStorage.setItem('username', username);
+            authMessage.textContent = '';
+            checkLoginStatus();
         } else {
             authMessage.textContent = '使用者名稱或密碼錯誤。';
         }
     });
 
     // 登出功能
-    logoutBtn.addEventListener('click', async () => {
+    logoutBtn.addEventListener('click', () => {
         localStorage.removeItem('isLoggedIn');
         localStorage.removeItem('username');
-        await signOut(auth); // 登出，清空 Firebase Auth 的狀態
         checkLoginStatus();
         childrenList.innerHTML = '';
     });
@@ -181,6 +152,5 @@ document.addEventListener('DOMContentLoaded', () => {
         };
     }
     
-    // 初始檢查登入狀態
     checkLoginStatus();
 });

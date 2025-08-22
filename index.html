@@ -18,11 +18,9 @@
 
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-app.js";
         import { getFirestore, collection, addDoc, getDocs, doc, deleteDoc, onSnapshot, query, orderBy, writeBatch } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-firestore.js";
-        import { getAuth, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-auth.js"; // 引入 Firebase Auth
 
         const app = initializeApp(firebaseConfig);
         window.db = getFirestore(app);
-        window.auth = getAuth(app); // 建立 Auth 實例
         window.collection = collection;
         window.addDoc = addDoc;
         window.getDocs = getDocs;
@@ -32,8 +30,6 @@
         window.query = query;
         window.orderBy = orderBy;
         window.writeBatch = writeBatch;
-        window.signInWithEmailAndPassword = signInWithEmailAndPassword; // 匯出函式
-        window.signOut = signOut; // 匯出函式
     </script>
 </head>
 <body>
