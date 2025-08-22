@@ -3,55 +3,72 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>好寶寶點數紀錄</title>
+    <title>好寶寶點數記錄</title>
     <link rel="stylesheet" href="style.css">
-
+    
     <script type="module">
         const firebaseConfig = {
-          apiKey: "AIzaSyBu6pQxu2Qsyj0tAt3TDSFTCKQwv57Z-p4", // <-- 請確保這裡填入您實際的 API Key
-          authDomain: "myresponsivewebsitedata.firebaseapp.com",
-          projectId: "myresponsivewebsitedata",
-          storageBucket: "myresponsivewebsitedata.firebasestorage.app",
-          messagingSenderId: "902585957360",
-          appId: "1:902585957360:web:a4376bf3f71a12f300bb35" // <-- 請確保這裡填入您實際的 App ID
+            apiKey: "AIzaSyBu6pQxu2Qsyj0tAt3TDSFTCKQwv57Z-p4", 
+            authDomain: "myresponsivewebsitedata.firebaseapp.com",
+            projectId: "myresponsivewebsitedata",
+            storageBucket: "myresponsivewebsitedata.firebasestorage.app",
+            messagingSenderId: "902585957360",
+            appId: "1:902585957360:web:a4376bf3f71a12f300bb35"
         };
 
-        // 導入 Firebase 模組，使用確切的版本號 10.9.0
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-app.js";
-        import { getFirestore, collection, addDoc, getDocs, doc, updateDoc, deleteDoc, onSnapshot, query, orderBy, writeBatch } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-firestore.js"; // 新增 writeBatch
+        import { getFirestore, collection, addDoc, getDocs, doc, deleteDoc, onSnapshot, query, orderBy, writeBatch } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-firestore.js";
+        import { getAuth, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-auth.js"; // 引入 Firebase Auth
 
-        // 初始化 Firebase
         const app = initializeApp(firebaseConfig);
-        // 獲取 Firestore 實例
-        const db = getFirestore(app);
-
-        // 將 db 實例和相關函數暴露給全局 window 物件，以便 script.js 可以訪問
-        window.db = db;
+        window.db = getFirestore(app);
+        window.auth = getAuth(app); // 建立 Auth 實例
         window.collection = collection;
         window.addDoc = addDoc;
         window.getDocs = getDocs;
         window.doc = doc;
-        window.updateDoc = updateDoc;
         window.deleteDoc = deleteDoc;
         window.onSnapshot = onSnapshot;
         window.query = query;
         window.orderBy = orderBy;
-        window.writeBatch = writeBatch; // 暴露 writeBatch
+        window.writeBatch = writeBatch;
+        window.signInWithEmailAndPassword = signInWithEmailAndPassword; // 匯出函式
+        window.signOut = signOut; // 匯出函式
     </script>
 </head>
 <body>
     <div class="container">
-        <h1>好寶寶點數紀錄</h1>
+        <h1>好寶寶點數記錄</h1>
 
-        <div class="add-child-section">
-            <input type="text" id="childNameInput" placeholder="輸入小孩名字">
-            <button id="addChildBtn">增加小孩</button>
+        <div id="loginSection">
+            <h2>使用者登入</h2>
+            <div class="login-form">
+                <input type="text" id="usernameInput" placeholder="使用者名稱" required>
+                <input type="password" id="passwordInput" placeholder="密碼" required>
+                <button id="loginBtn">登入</button>
+            </div>
+            <p id="authMessage" class="error-message"></p>
         </div>
 
-        <div class="children-list-section">
-            <h2>小孩列表</h2>
-            <ul id="childrenList">
+        <div id="appSection" style="display: none;">
+            <div class="user-info-bar">
+                <p>你好，<span id="loggedInUsername"></span>！</p>
+                <button id="logoutBtn">登出</button>
+            </div>
+
+            <div class="add-child-section">
+                <input type="text" id="childNameInput" placeholder="輸入小孩名字">
+                <button id="addChildBtn">增加小孩</button>
+            </div>
+
+            <div class="children-list-section">
+                <h2>小孩列表</h2>
+                <ul id="childrenList">
+                    <p id="noChildrenMessage" style="text-align: center; margin-top: 20px; display: none;">
+                        目前沒有小孩資料，新增一個吧！
+                    </p>
                 </ul>
+            </div>
         </div>
     </div>
 

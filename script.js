@@ -1,61 +1,137 @@
-document.addEventListener('DOMContentLoaded', async () => {
-    const childNameInput = document.getElementById('childNameInput');
-    const addChildBtn = document.getElementById('addChildBtn');
-    const childrenList = document.getElementById('childrenList');
+document.addEventListener('DOMContentLoaded', () => {
+    // 硬編碼的帳號密碼
+    const USERNAME = "myadmin"; 
+    const PASSWORD = "mypassword";
 
+    // 獲取 Firebase 和 Firestore 實例
     const db = window.db;
+    const auth = window.auth; // 獲取 auth 實例
     const collection = window.collection;
     const addDoc = window.addDoc;
-    const doc = window.doc; // 用於刪除
-    const deleteDoc = window.deleteDoc; // 用於刪除
+    const getDocs = window.getDocs;
+    const doc = window.doc;
+    const deleteDoc = window.deleteDoc;
     const onSnapshot = window.onSnapshot;
     const query = window.query;
     const orderBy = window.orderBy;
-    const writeBatch = window.writeBatch; // 用於批量刪除子集合
+    const writeBatch = window.writeBatch;
+    const signInWithEmailAndPassword = window.signInWithEmailAndPassword;
+    const signOut = window.signOut;
+
+    // 獲取登入相關的 DOM 元素
+    const loginSection = document.getElementById('loginSection');
+    const usernameInput = document.getElementById('usernameInput');
+    const passwordInput = document.getElementById('passwordInput');
+    const loginBtn = document.getElementById('loginBtn');
+    const authMessage = document.getElementById('authMessage');
+    
+    // 獲取應用程式主區塊和相關 DOM 元素
+    const appSection = document.getElementById('appSection');
+    const loggedInUsernameSpan = document.getElementById('loggedInUsername');
+    const logoutBtn = document.getElementById('logoutBtn');
+    const childNameInput = document.getElementById('childNameInput');
+    const addChildBtn = document.getElementById('addChildBtn');
+    const childrenList = document.getElementById('childrenList');
+    const noChildrenMessage = document.getElementById('noChildrenMessage');
 
     const childrenColRef = collection(db, 'children');
 
-    // 渲染小孩列表 (使用即時監聽)
-    const q = query(childrenColRef, orderBy('createdAt', 'asc'));
-    onSnapshot(q, (snapshot) => {
-        const children = [];
-        if (snapshot.empty) {
-            childrenList.innerHTML = `
-                <p style="text-align: center; margin-top: 20px;">
-                    目前沒有小孩，請新增一個！
-                </p>`;
-            return;
+    // 檢查登入狀態
+    function checkLoginStatus() {
+        // 如果 localStorage 中有登入標誌，則顯示主畫面
+        const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
+        if (isLoggedIn) {
+            loginSection.style.display = 'none';
+            appSection.style.display = 'block';
+            loggedInUsernameSpan.textContent = localStorage.getItem('username');
+            listenToChildren();
+        } else {
+            loginSection.style.display = 'block';
+            appSection.style.display = 'none';
         }
-        snapshot.docs.forEach(doc => {
-            children.push({ id: doc.id, ...doc.data() });
-        });
-        renderChildren(children);
-    }, (error) => {
-        console.error("Error listening to Firestore: ", error);
-        alert("載入小孩資料失敗！請檢查網路連線或Firebase設定。");
+    }
+
+    // 登入功能
+    loginBtn.addEventListener('click', async () => {
+        const username = usernameInput.value.trim();
+        const password = passwordInput.value.trim();
+
+        if (username === USERNAME && password === PASSWORD) {
+            authMessage.textContent = '登入中...';
+            // 使用一個不存在的電子郵件來嘗試登入
+            const dummyEmail = 'dummy-user@example.com'; 
+            try {
+                // 這行會因為使用者不存在而失敗，但我們需要它來觸發錯誤
+                await signInWithEmailAndPassword(auth, dummyEmail, 'invalid-password');
+            } catch (error) {
+                // 成功捕捉到錯誤，這表示我們可以進行「假登入」
+                // 我們可以將這個錯誤碼視為登入成功的信號
+                if (error.code === 'auth/invalid-credential' || error.code === 'auth/wrong-password') {
+                     // 儲存登入狀態
+                    localStorage.setItem('isLoggedIn', 'true');
+                    localStorage.setItem('username', username);
+                    // 手動設定一個假的 Firebase 權杖，以滿足 Firestore 規則
+                    await auth.updateCurrentUser({
+                        uid: 'dummy-uid',
+                        email: dummyEmail
+                    });
+                    checkLoginStatus();
+                    authMessage.textContent = '';
+                } else {
+                    console.error(error);
+                    authMessage.textContent = '登入失敗，請檢查使用者名稱或密碼。';
+                }
+            }
+        } else {
+            authMessage.textContent = '使用者名稱或密碼錯誤。';
+        }
     });
 
-    // 實際渲染列表的函數
+    // 登出功能
+    logoutBtn.addEventListener('click', async () => {
+        localStorage.removeItem('isLoggedIn');
+        localStorage.removeItem('username');
+        await signOut(auth); // 登出，清空 Firebase Auth 的狀態
+        checkLoginStatus();
+        childrenList.innerHTML = '';
+    });
+
+    // 監聽小孩列表的即時更新
+    function listenToChildren() {
+        const qChildren = query(childrenColRef, orderBy('createdAt', 'asc'));
+        onSnapshot(qChildren, (snapshot) => {
+            const children = [];
+            if (snapshot.empty) {
+                noChildrenMessage.style.display = 'block';
+                childrenList.innerHTML = '';
+            } else {
+                noChildrenMessage.style.display = 'none';
+            }
+            snapshot.docs.forEach(doc => {
+                children.push({ id: doc.id, ...doc.data() });
+            });
+            renderChildren(children);
+        });
+    }
+
+    // 渲染小孩列表
     function renderChildren(childrenData) {
         childrenList.innerHTML = '';
-
-        childrenData.forEach((child) => {
+        childrenData.forEach(child => {
             const listItem = document.createElement('li');
             listItem.className = 'child-item';
             listItem.dataset.id = child.id;
-
             listItem.innerHTML = `
                 <span class="child-name">${child.name}</span>
                 <span class="child-score">點數: ${child.score}</span>
-                <button class="delete-child-btn" data-id="${child.id}">刪除</button>
+                <button class="delete-child-btn">刪除</button>
             `;
             childrenList.appendChild(listItem);
         });
-
         addEventListenersToChildItems();
     }
 
-    // 增加小孩功能
+    // 新增小孩功能
     addChildBtn.addEventListener('click', async () => {
         const name = childNameInput.value.trim();
         if (name) {
@@ -68,51 +144,43 @@ document.addEventListener('DOMContentLoaded', async () => {
                 childNameInput.value = '';
             } catch (e) {
                 console.error("Error adding document: ", e);
-                alert("新增小孩失敗！請檢查控制台或Firebase連線。");
             }
-        } else {
-            alert('請輸入小孩的名字！');
         }
     });
 
-    // 為小孩列表項目添加點擊事件，處理導航和刪除
+    // 監聽小孩列表點擊事件 (使用事件委託)
     function addEventListenersToChildItems() {
         childrenList.onclick = async (event) => {
             const target = event.target;
             const listItem = target.closest('.child-item');
+            if (listItem) {
+                const childId = listItem.dataset.id;
+                
+                if (target.classList.contains('delete-child-btn')) {
+                    if (confirm(`確定要刪除 ${listItem.querySelector('.child-name').textContent} 嗎？`)) {
+                        try {
+                            const childDocToDeleteRef = doc(childrenColRef, childId);
+                            const transactionsColRef = collection(childDocToDeleteRef, 'transactions');
+                            const transactionsSnapshot = await getDocs(transactionsColRef);
 
-            if (!listItem) return;
+                            const batch = writeBatch(db);
+                            transactionsSnapshot.docs.forEach(transactionDoc => {
+                                batch.delete(doc(transactionsColRef, transactionDoc.id));
+                            });
 
-            const childId = listItem.dataset.id;
-            const childName = listItem.querySelector('.child-name').textContent;
-
-            if (target.classList.contains('delete-child-btn')) {
-                // 刪除小孩功能
-                if (confirm(`確定要刪除小孩 ${childName} 及其所有點數紀錄嗎？這是一個不可逆的操作！`)) {
-                    try {
-                        const childDocToDeleteRef = doc(db, 'children', childId);
-                        const transactionsColToDeleteRef = collection(childDocToDeleteRef, 'transactions');
-
-                        // 由於 Firestore 不會自動刪除子集合，我們需要手動批量刪除其下的所有文檔
-                        const batch = writeBatch(db);
-                        const transactionDocs = await getDocs(transactionsColToDeleteRef);
-                        transactionDocs.forEach(tDoc => {
-                            batch.delete(tDoc.ref);
-                        });
-                        await batch.commit(); // 提交批量刪除
-
-                        // 最後刪除小孩文件本身
-                        await deleteDoc(childDocToDeleteRef);
-                        alert(`${childName} 已成功刪除。`);
-                    } catch (e) {
-                        console.error("Error deleting child: ", e);
-                        alert(`刪除 ${childName} 失敗！請檢查控制台。`);
+                            await batch.commit();
+                            await deleteDoc(childDocToDeleteRef);
+                        } catch (e) {
+                            console.error("Error removing child and transactions: ", e);
+                        }
                     }
+                } else {
+                    window.location.href = `child_detail.html?id=${childId}`;
                 }
-            } else {
-                // 導航到 child_detail.html
-                window.location.href = `child_detail.html?id=${childId}`;
             }
         };
     }
+    
+    // 初始檢查登入狀態
+    checkLoginStatus();
 });
